@@ -69,17 +69,24 @@ Transformación automática de la propuesta a ejecución real:
 
 ---
 
-### Paso 5: Auditoría de Control de Cambios & TRACKER EYS
-1. **Control de Cambios Celda por Celda**:
-   - Matriz comparativa entre **`OTA Validada`** (versión anterior) vs **`OTAS REFS`** (nueva propuesta).
-   - Detección visual de discrepancias en fechas, modelos de antena, longitudes de jumpers y calibres de cable.
-2. **Integración con TRACKER EYS**:
-   - Registro automático del sitio en el tablero de control:
+### Paso 5: Auditoría de Control de Cambios, Validación "F8" y Entrega en Rollout Plan
+1. **Tool de Validación As-Built (Criterio "OK OK OK")**:
+   - Validación cruzada de campos entre As-Built y OTA. Todo debe salir en color blanco / estatus **OK**. Si algún campo aparece en rojo, significa que no hay match en cables, bandas o antenas y requiere ajuste antes de la liberación.
+2. **Tool de Control de Cambios (Comparador Celda por Celda)**:
+   - Comparativa automática entre **`OTA Validada`** (versión inicial) vs **`OTAS REFS`** (nueva propuesta).
+   - Generación de la pestaña obligatoria **`control de cambios`** dentro del archivo final con comentarios estandarizados (ej. *"Cambio de ubicación de propuesta de DCDU o BBU en AutoCAD"*).
+3. **Carga y Entrega en Plataforma Huawei (Rollout Plan / ISDP)**:
+   - Acceso con cuentas WX (asignadas por coordinación).
+   - En **`AsBuilt GCC` (Opción 7)**: Cargar únicamente el archivo Excel final del As-Built.
+   - En **`DWG` (Opción 7)**: Cargar el plano final de AutoCAD (`.dwg`).
+   - En **`OTAS versus REFS`**: Cargar el archivo Excel de OTAS REFS con su pestaña de control de cambios.
+4. **Registro en TRACKER EYS**:
+   - Registro del sitio en el tablero de control de entregas de *Engineering and Services*:
      - `Service`: As built / New Template
      - `OTAS Status`: Completed (100%)
      - `Team Owner`: ENGINEERING AND SERVICES JF SA DE CV
      - `ITEM DESCRIPTION`: WITH TOOL
-     - `PRECIO`: $ 249.16 MXN
+     - `PRECIO`: $ 249.16 MXN por sitio liberado.
 
 ---
 
