@@ -26,6 +26,11 @@
             <div class="collapse navbar-collapse" id="navbarContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/pipeline' %}active fw-semibold text-warning{% endif %}" href="{{ url_for('pipeline') }}">
+                            <i class="bi bi-diagram-3-fill text-warning me-1"></i> Flujo Automatizado
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if request.path == '/' %}active fw-semibold{% endif %}" href="{{ url_for('index') }}">
                             <i class="bi bi-speedometer2 me-1"></i> Dashboard Tool
                         </a>

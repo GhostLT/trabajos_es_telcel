@@ -117,6 +117,43 @@ def index():
         }
     )
 
+@app.route("/pipeline")
+def pipeline():
+    site_query = request.args.get("site", "CA0249").strip().upper()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    gsm_cells = cursor.execute("SELECT * FROM gsm_cells WHERE id_name = ?", (site_query,)).fetchall()
+    gsm_act = sum(1 for c in gsm_cells if "ACT" in (c["activity_status"] or "").upper())
+    gsm_inact = len(gsm_cells) - gsm_act
+    
+    umts_cells = cursor.execute("SELECT * FROM umts_cells WHERE id_name = ?", (site_query,)).fetchall()
+    umts_act = sum(1 for c in umts_cells if "ACT" in (c["activity_status"] or "").upper())
+    umts_inact = len(umts_cells) - umts_act
+    
+    lte_cells = cursor.execute("SELECT * FROM lte_cells WHERE id_name = ?", (site_query,)).fetchall()
+    lte_act = sum(1 for c in lte_cells if "ACT" in (c["activation_status"] or "").upper())
+    lte_inact = len(lte_cells) - lte_act
+    
+    nr_cells = cursor.execute("SELECT * FROM nr_cells WHERE id_name = ?", (site_query,)).fetchall()
+    nr_act = sum(1 for c in nr_cells if "ACT" in (c["activation_status"] or "").upper())
+    nr_inact = len(nr_cells) - nr_act
+    
+    rru_list = cursor.execute("SELECT * FROM rru_items WHERE id_name = ?", (site_query,)).fetchall()
+    conn.close()
+    
+    return render_template(
+        "pipeline.html",
+        site_id=site_query,
+        site_counts={
+            "gsm": {"act": gsm_act, "inact": gsm_inact},
+            "umts": {"act": umts_act, "inact": umts_inact},
+            "lte": {"act": lte_act, "inact": lte_inact},
+            "nr": {"act": nr_act, "inact": nr_inact}
+        },
+        site_rru=[dict(r) for r in rru_list]
+    )
+
 @app.route("/cells")
 def cells():
     tech = request.args.get("tech", "lte").lower()

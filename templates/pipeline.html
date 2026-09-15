@@ -1,0 +1,477 @@
+{% extends "base.html" %}
+
+{% block title %}Flujo Automatizado Secuencial | Trabajos ES Telcel{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h3 class="fw-bold mb-1 text-telcel">
+            <i class="bi bi-diagram-3-fill text-warning me-2"></i>
+            Pipeline de Automatización: Flujo Secuencial As-Built Telcel
+        </h3>
+        <span class="text-muted small">
+            Secuencia completa y automatizada extraída de los videos de capacitación técnica: 
+            <strong>OTA Validada</strong> &bull; <strong>Material List (ML)</strong> &bull; <strong>AutoCAD DWG</strong> &bull; <strong>ISDP Smart QC</strong> &bull; <strong>Super OTAS</strong> &bull; <strong>As-Built</strong> &bull; <strong>Tracker</strong>
+        </span>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="#paso1" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-down-circle me-1"></i> Ir al Paso 1</a>
+        <a href="#paso4" class="btn btn-warning btn-sm fw-semibold"><i class="bi bi-file-earmark-check me-1"></i> Ver Generador As-Built</a>
+    </div>
+</div>
+
+<!-- Workflow Stepper Indicator -->
+<div class="card shadow-sm border-0 mb-4 bg-white">
+    <div class="card-body p-4">
+        <div class="row text-center g-3">
+            <div class="col-md-2 col-4">
+                <div class="p-3 rounded border bg-light h-100">
+                    <div class="badge bg-primary rounded-pill mb-2 fs-7">PASO 1</div>
+                    <h6 class="fw-bold text-dark mb-1">Insumos & Cruce</h6>
+                    <small class="text-muted d-block">OTA + ML + CAD + ISDP</small>
+                </div>
+            </div>
+            <div class="col-md-2 col-4">
+                <div class="p-3 rounded border bg-light h-100">
+                    <div class="badge bg-info text-dark rounded-pill mb-2 fs-7">PASO 2</div>
+                    <h6 class="fw-bold text-dark mb-1">Reglas de Cable</h6>
+                    <small class="text-muted d-block">8 AWG vs 7 AWG / Metrajes</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-4">
+                <div class="p-3 rounded border bg-light h-100">
+                    <div class="badge bg-warning text-dark rounded-pill mb-2 fs-7">PASO 3</div>
+                    <h6 class="fw-bold text-dark mb-1">OTAS X REFS (Rev A)</h6>
+                    <small class="text-muted d-block">Propuesta y Croquis FPP</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="p-3 rounded border border-success bg-light h-100">
+                    <div class="badge bg-success rounded-pill mb-2 fs-7">PASO 4</div>
+                    <h6 class="fw-bold text-success mb-1">As-Built Final</h6>
+                    <small class="text-muted d-block">Notas ejecutadas + Fotos ISDP</small>
+                </div>
+            </div>
+            <div class="col-md-2 col-6">
+                <div class="p-3 rounded border bg-light h-100">
+                    <div class="badge bg-dark rounded-pill mb-2 fs-7">PASO 5</div>
+                    <h6 class="fw-bold text-dark mb-1">Control & Tracker</h6>
+                    <small class="text-muted d-block">Diff celda a celda + E&S</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Site Input Simulator for Pipeline -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body p-4">
+        <form method="get" action="{{ url_for('pipeline') }}" class="row g-3 align-items-center">
+            <div class="col-md-4">
+                <label class="form-label fw-bold text-dark mb-1"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Sitio a Procesar (NE ID / Short DU ID):</label>
+                <div class="input-group">
+                    <input type="text" name="site" id="pipelineSiteInput" class="form-control form-control-lg fw-bold" placeholder="Ej. CA0249, QR5094, JL4089" value="{{ site_id or 'CA0249' }}" required>
+                    <button type="submit" class="btn btn-primary fw-bold px-4">Cargar Sitio</button>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="p-3 rounded bg-light border">
+                    <span class="small text-muted d-block mb-1">Sitios con evidencia y celdas cargadas:</span>
+                    <a href="/pipeline?site=CA0249" class="badge bg-primary text-decoration-none me-1 p-2">CA0249</a>
+                    <a href="/pipeline?site=JL4089" class="badge bg-secondary text-decoration-none me-1 p-2">JL4089</a>
+                    <a href="/pipeline?site=MI2742" class="badge bg-secondary text-decoration-none me-1 p-2">MI2742</a>
+                    <a href="/pipeline?site=JL1999" class="badge bg-secondary text-decoration-none me-1 p-2">JL1999</a>
+                    <a href="/pipeline?site=MI2888" class="badge bg-secondary text-decoration-none p-2">MI2888</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Step by Step Interactive Sections -->
+
+<!-- PASO 1: Insumos de Entrada -->
+<div class="card shadow-sm border-0 mb-4" id="paso1">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0 text-primary">
+            <span class="badge bg-primary me-2">PASO 1</span>
+            Mapeo y Cruce de Insumos para Sitio: <span class="text-dark">{{ site_id }}</span>
+        </h5>
+        <span class="badge bg-light text-muted border">Extracción Automatizada</span>
+    </div>
+    <div class="card-body p-4">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="border rounded p-3 h-100 bg-light">
+                    <h6 class="fw-bold text-dark d-flex align-items-center gap-1">
+                        <i class="bi bi-file-earmark-excel-fill text-success"></i> 1. As-Built Tool
+                    </h6>
+                    <small class="text-muted d-block mb-2">Base de datos Telcel SQLite (1.48M registros)</small>
+                    <ul class="list-unstyled small mb-0">
+                        <li>&bull; 2G GSM: <strong>{{ site_counts.gsm.act }} Activas</strong> / {{ site_counts.gsm.inact }} Inact.</li>
+                        <li>&bull; 3G UMTS: <strong>{{ site_counts.umts.act }} Activas</strong> / {{ site_counts.umts.inact }} Inact.</li>
+                        <li>&bull; 4G LTE: <strong>{{ site_counts.lte.act }} Activas</strong> / {{ site_counts.lte.inact }} Inact.</li>
+                        <li>&bull; 5G NR: <strong>{{ site_counts.nr.act }} Activas</strong> / {{ site_counts.nr.inact }} Inact.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="border rounded p-3 h-100 bg-light">
+                    <h6 class="fw-bold text-dark d-flex align-items-center gap-1">
+                        <i class="bi bi-card-checklist text-primary"></i> 2. OTA Validada
+                    </h6>
+                    <small class="text-muted d-block mb-2">Versión previa aprobada (ej. Rev D)</small>
+                    <ul class="list-unstyled small mb-0">
+                        <li>&bull; GPS: <strong>Existente a 15.0 m</strong></li>
+                        <li>&bull; Gabinete: <strong>TP48200A (Existente)</strong></li>
+                        <li>&bull; Rectificadores: <strong>(4) PSU-2U</strong></li>
+                        <li>&bull; Comentarios previos extraídos</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="border rounded p-3 h-100 bg-light">
+                    <h6 class="fw-bold text-dark d-flex align-items-center gap-1">
+                        <i class="bi bi-box-seam text-warning"></i> 3. Material List (ML)
+                    </h6>
+                    <small class="text-muted d-block mb-2">Material enviado por logística</small>
+                    <ul class="list-unstyled small mb-0">
+                        <li>&bull; Tirada Fibra: <strong>40.0 m (3 tiradas)</strong></li>
+                        <li>&bull; Tirada Fuerza DC: <strong>38.0 m (3 tiradas)</strong></li>
+                        <li>&bull; Jumpers: <strong>2.0 m (DIN / 4.3-10)</strong></li>
+                        <li>&bull; Antenas y kits asignados</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="border rounded p-3 h-100 bg-light">
+                    <h6 class="fw-bold text-dark d-flex align-items-center gap-1">
+                        <i class="bi bi-camera-fill text-info"></i> 4. ISDP Smart QC & CAD
+                    </h6>
+                    <small class="text-muted d-block mb-2">Evidencias fotográficas y DWG</small>
+                    <ul class="list-unstyled small mb-0">
+                        <li>&bull; Azimuts: <strong>350° (A), 130° (B), 250° (G)</strong></li>
+                        <li>&bull; Altura de antenas: <strong>15.0 m</strong></li>
+                        <li>&bull; Números de serie de etiquetas leídos</li>
+                        <li>&bull; Referencias a fotos para As-Built</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PASO 2: Reglas de Ingeniería de Cable & Fuerza -->
+<div class="card shadow-sm border-0 mb-4" id="paso2">
+    <div class="card-header bg-white py-3">
+        <h5 class="fw-bold mb-0 text-info">
+            <span class="badge bg-info text-dark me-2">PASO 2</span>
+            Motor de Reglas de Cable de Fuerza (DC) y Metrajes Automáticos
+        </h5>
+    </div>
+    <div class="card-body p-4">
+        <div class="row g-4 align-items-center">
+            <div class="col-lg-7">
+                <h6 class="fw-bold text-dark mb-2">Tabla de Compatibilidad Modelo de Radio &harr; Calibre de Cable:</h6>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm text-center align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Calibre</th>
+                                <th>Diámetro</th>
+                                <th>Modelos de Radio Compatibles</th>
+                                <th>Tiradas Sitio</th>
+                                <th>Metros por Tirada</th>
+                                <th>Total Metros Calculados</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="table-warning">
+                                <td class="fw-bold">8 AWG</td>
+                                <td>8 mm</td>
+                                <td class="text-start ps-3">RRU5513, RRU5526, RRU5526w, AAU 5G (850 / 600 MHz)</td>
+                                <td>3 tiradas</td>
+                                <td>38.0 m</td>
+                                <td class="fw-bold text-success fs-6">114 m</td>
+                            </tr>
+                            <tr class="table-info">
+                                <td class="fw-bold">7 AWG</td>
+                                <td>10 mm</td>
+                                <td class="text-start ps-3">RRU5517, RRU5527, RRU5527et (Tribanda 1900/2100/2600)</td>
+                                <td>3 tiradas</td>
+                                <td>38.0 m</td>
+                                <td class="fw-bold text-success fs-6">114 m</td>
+                            </tr>
+                            <tr class="table-light">
+                                <td class="text-muted">10 AWG</td>
+                                <td>6 mm</td>
+                                <td class="text-start ps-3">Equipos legados / Micro RRU</td>
+                                <td>0</td>
+                                <td>-</td>
+                                <td>0 m</td>
+                            </tr>
+                            <tr class="table-light">
+                                <td class="text-muted">5 AWG / 4 AWG</td>
+                                <td>16 mm / 25 mm</td>
+                                <td class="text-start ps-3">Alimentación principal Planta &rarr; DCDU</td>
+                                <td>0</td>
+                                <td>-</td>
+                                <td>0 m</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="p-3 bg-light rounded border">
+                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-calculator-fill text-primary me-1"></i>Regla de Validación Cruzada:</h6>
+                    <p class="small text-muted mb-2">
+                        El metraje de la Lista de Materiales (<strong>ML</strong>) debe cuadrar exactamente con la tabla <code>ADICIONALES HARDWARE RF</code> de la portada y la tabla de sectores del As-Built:
+                    </p>
+                    <div class="p-2 bg-white rounded border small font-monospace mb-2">
+                        &bull; CABLE DE DC PARA RRU 8MM (MTS) (8 AWG) = 114<br>
+                        &bull; CABLE DE DC PARA RRU 10MM (MTS) (7 AWG) = 114<br>
+                        &bull; FIBRA OPTICA = 3 sectores &times; 40.0 m = 120 m
+                    </div>
+                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Match validado al 100%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PASO 3: Generación de OTAS X REFS (Rev A) -->
+<div class="card shadow-sm border-0 mb-4" id="paso3">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0 text-warning">
+            <span class="badge bg-warning text-dark me-2">PASO 3</span>
+            Generador de Formato Oficial: OTAS X REFS (Revisión A)
+        </h5>
+        <a href="/api/export/site/{{ site_id }}" class="btn btn-outline-warning btn-sm fw-bold">
+            <i class="bi bi-file-earmark-excel me-1"></i> Descargar Borrador OTAS X REFS
+        </a>
+    </div>
+    <div class="card-body p-4">
+        <p class="text-muted small">
+            Genera el documento de adecuación inicial antes de la ejecución de obra, con nomenclatura de requerimiento en futuro:
+        </p>
+        <div class="border rounded p-3 bg-light font-monospace small">
+            <ol class="mb-0 ps-3">
+                <li>Se requiere reutilizar gabinete TP48200A existente en sitio para la instalación de nuevos equipos.</li>
+                <li>Se requiere suministro e instalación de equipos (1) BBU5900, (2) DCDU17E y la tarjetería (2) UBBPg2.</li>
+                <li>Se requieren 6 tiradas de Fibra de 40.0m y 6 tiradas de cable DC de 38.0m para los equipos en los sectores 1, 2 y 3.</li>
+                <li>Se reutilizan trayectorias existentes de tierras para conexion de equipos nuevos Radios en torre y DCDU nueva.</li>
+                <li>La transmision se tomará del equipo TX existente.</li>
+                <li>Se requieren (8) jumper's de 2.00 mts de DIN a 4.3-10 y (4) jumper's de 2.00 mts de 4.3-10 a 4.3-10 para conexión de RRU5527et.</li>
+                <li>Se requiere instalar 3 RRU 5526 back to back con antenas A02200PA22V06 (600/UL850) en sector 1, 2 y 3.</li>
+                <li>Se requiere instalar 3 nuevas antenas A02200PA22V06 para (600/UL850) a 15 m para sector 1, 2 y 3.</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<!-- PASO 4: Generación de AS-BUILT FINAL (Estado Final de Sitio) -->
+<div class="card shadow-sm border-0 mb-4 border-success" id="paso4">
+    <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0">
+            <span class="badge bg-white text-success me-2">PASO 4</span>
+            Generador de ESTADO FINAL DE SITIO / AS BUILT (Con Referencias Fotográficas ISDP)
+        </h5>
+        <a href="/api/export/site/{{ site_id }}" class="btn btn-light btn-sm fw-bold text-success">
+            <i class="bi bi-cloud-arrow-down-fill me-1"></i> Descargar AS-BUILT (.xlsx)
+        </a>
+    </div>
+    <div class="card-body p-4">
+        <div class="alert alert-success border-0 small mb-3">
+            <i class="bi bi-magic me-1"></i>
+            <strong>Transformación Gramatical y Referencial Automática:</strong>
+            El motor convierte las oraciones de propuesta a pasado e inserta automáticamente los llamados a las fotografías de evidencia registradas en ISDP Smart QC.
+        </div>
+
+        <div class="border rounded p-3 bg-light font-monospace small mb-4">
+            <h6 class="fw-bold text-dark font-sans-serif mb-2">RESUMEN DE TRABAJOS REALIZADOS DENTRO DE MODERNIZACION:</h6>
+            <ol class="mb-0 ps-3">
+                <li>Se reutilizó gabinete TP48200A existente en sitio para la instalación de nuevos equipos.</li>
+                <li>Se instalaron los equipos (1) BBU5900, (2) DCDU17E y la tarjetería (2) UBBPg2.</li>
+                <li>Se instalaron 6 tiradas de Fibra de 40.0m y 6 tiradas de cable DC de 38.0m para los equipos en los sectores 1, 2 y 3.</li>
+                <li>Se reutilizaron trayectorias existentes de tierras para conexión de equipos nuevos Radios en torre y DCDU nueva.</li>
+                <li>La transmisión se tomó del equipo TX existente.</li>
+                <li>Se instalaron (8) jumper's de 2.00 mts de DIN a 4.3-10 y (4) jumper's de 2.00 mts de 4.3-10 a 4.3-10 para conexión de RRU5527et.</li>
+                <li class="fw-bold text-primary">Se instalaron 3 RRU 5526 back to back con antenas A02200PA22V06 (600/UL850) en sector 1, 2 y 3. <span class="badge bg-warning text-dark">Ver foto 10 de sectores Alpha, Beta y Gamma</span>.</li>
+                <li class="fw-bold text-primary">Se instalaron 3 nuevas antenas A02200PA22V06 para (600/UL850) a 15 m para sector 1, 2 y 3. <span class="badge bg-warning text-dark">Ver foto 10 de sectores Alpha, Beta y Gamma</span>.</li>
+                <li>Se instalaron (12) jumper's de 2.00 mts de 4.3-10 a 4.3-10 para conexión de RRU5526.</li>
+                <li class="fw-bold text-primary">Se instalaron 3 RRU5527et back to back con antenas a reutilizar en sector 1 y 3. <span class="badge bg-warning text-dark">Ver foto 17 de sectores Alpha, Beta y Gamma</span>.</li>
+                <li class="fw-bold text-primary">Se reutilizaron 2 antenas MBMF-65-18DDE-IN-43 a 15 m para sector 1 y 3. <span class="badge bg-warning text-dark">Ver foto 11 de sectores Alpha y Gamma</span>.</li>
+                <li class="fw-bold text-primary">Se instaló 1 antena ADU4518R6v06 para (GU1900/L2100/L2600) a 15 m para sector 2. <span class="badge bg-warning text-dark">Ver foto 11 de sector Beta</span>.</li>
+                <li class="text-danger">Se desmontaron 3 RRUs U850 existentes en sector 1, 2 y 3.</li>
+                <li class="text-danger">Se desmontaron 3 RRU GU1900 existentes en sector 1, 2 y 3.</li>
+                <li class="text-danger">Se desmontaron 2 antenas Dual Band (U850/G1900) para liberar espacio a nueva antena para sector 1 y 3.</li>
+                <li class="text-danger">Se desmontaron 3 RRU L2100 existentes en sector 1, 2 y 3.</li>
+                <li class="text-danger">Se desmontó 1 antena TENPOLE para liberar espacio a nueva antena en sector 2.</li>
+                <li class="text-danger">Se desmontaron 3 RRU L2600 existentes en sector 1, 2 y 3.</li>
+                <li class="text-danger">Se desmontó 1 antena QUADPOLE (L2600) para liberar espacio a nueva antena en sector 2.</li>
+            </ol>
+        </div>
+
+        <!-- Radios and Sectors Table -->
+        <h6 class="fw-bold text-dark mb-2">Tabla de Sectores y Radios Validados para {{ site_id }}:</h6>
+        <div class="table-responsive">
+            <table class="table table-hover table-striped table-sm border align-middle">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Sector</th>
+                        <th>Modelo Radio</th>
+                        <th>Bandas Soportadas</th>
+                        <th>Potencia</th>
+                        <th>Número de Serie (ISDP)</th>
+                        <th>Conector</th>
+                        <th>FO (m)</th>
+                        <th>DC (m)</th>
+                        <th>Calibre</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in site_rru %}
+                    <tr>
+                        <td><span class="badge bg-secondary">Sector {{ loop.index }}</span></td>
+                        <td class="fw-bold text-primary">{{ r.modelo_rru or 'RRU5526' }}</td>
+                        <td>{{ r.bandas_soportadas or '600+850 MHz' }}</td>
+                        <td>{{ r.potencia or '4x120 W' }}</td>
+                        <td><code>{{ r.no_serie }}</code></td>
+                        <td>{{ r.conector or '4.3-10' }}</td>
+                        <td>40.0</td>
+                        <td>38.0</td>
+                        <td>
+                            {% if '5527' in (r.modelo_rru or '') %}
+                                <span class="badge bg-info text-dark">7-AWG</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">8-AWG</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td><span class="badge bg-secondary">ALFA</span></td>
+                        <td class="fw-bold text-primary">RRU5526</td>
+                        <td>600+850 MHz</td>
+                        <td>4x120 W</td>
+                        <td><code>2102315GXDU...</code></td>
+                        <td>4.3-10</td>
+                        <td>40.0</td>
+                        <td>38.0</td>
+                        <td><span class="badge bg-warning text-dark">8-AWG</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-secondary">ALFA</span></td>
+                        <td class="fw-bold text-primary">RRU5527et</td>
+                        <td>1900+2100+2600 MHz</td>
+                        <td>4x160 W</td>
+                        <td><code>2102315EDP1...</code></td>
+                        <td>DIN / 4.3-10</td>
+                        <td>40.0</td>
+                        <td>38.0</td>
+                        <td><span class="badge bg-info text-dark">7-AWG</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- PASO 5: Control de Cambios y Tracker E&S -->
+<div class="card shadow-sm border-0 mb-4" id="paso5">
+    <div class="card-header bg-white py-3">
+        <h5 class="fw-bold mb-0 text-dark">
+            <span class="badge bg-dark me-2">PASO 5</span>
+            Auditoría de Control de Cambios (Diff Celda por Celda) & TRACKER EYS
+        </h5>
+    </div>
+    <div class="card-body p-4">
+        <div class="row g-4">
+            <!-- Diff Tool -->
+            <div class="col-lg-6">
+                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-file-diff text-danger me-1"></i>Matriz de Cambios (OTA Validada vs OTAS REFS):</h6>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm small align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Campo</th>
+                                <th>Valor OTA Validada</th>
+                                <th>Celda Excel</th>
+                                <th>Valor OTAS REFS</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="fw-bold">Fecha Elaboración</td>
+                                <td>-</td>
+                                <td><code>HW!E6</code></td>
+                                <td>15/09/2026</td>
+                                <td><span class="badge bg-success">OK</span></td>
+                            </tr>
+                            <tr class="table-warning">
+                                <td class="fw-bold">Antenas Sector 1</td>
+                                <td>CSX6-65</td>
+                                <td><code>HW!J130</code></td>
+                                <td>A02200PA22V06</td>
+                                <td><span class="badge bg-warning text-dark">Actualizado</span></td>
+                            </tr>
+                            <tr class="table-warning">
+                                <td class="fw-bold">Longitud Jumpers</td>
+                                <td>3.0 m</td>
+                                <td><code>HW!M135</code></td>
+                                <td>2.0 m</td>
+                                <td><span class="badge bg-warning text-dark">Actualizado</span></td>
+                            </tr>
+                            <tr class="table-success">
+                                <td class="fw-bold">Cable DC 8 AWG</td>
+                                <td>0</td>
+                                <td><code>HW!Q38</code></td>
+                                <td>114 m</td>
+                                <td><span class="badge bg-success">Calculado</span></td>
+                            </tr>
+                            <tr class="table-success">
+                                <td class="fw-bold">Cable DC 7 AWG</td>
+                                <td>0</td>
+                                <td><code>HW!Q39</code></td>
+                                <td>114 m</td>
+                                <td><span class="badge bg-success">Calculado</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tracker E&S Status -->
+            <div class="col-lg-6">
+                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-kanban text-primary me-1"></i>Registro en TRACKER EYS:</h6>
+                <div class="border rounded p-3 bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small">Estado de Entrega:</span>
+                        <span class="badge bg-success fs-7">COMPLETED (100%)</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small">Empresa Responsable:</span>
+                        <span class="fw-semibold small">ENGINEERING AND SERVICES JF SA DE CV</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small">Recurso Responsable:</span>
+                        <span class="fw-semibold small">Michael Mejia / GhostLT</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small">Descripción del Item:</span>
+                        <span class="badge bg-primary">WITH TOOL</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">Precio Unitario por Sitio:</span>
+                        <span class="fw-bold text-success">$ 249.16 MXN</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

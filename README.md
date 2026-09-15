@@ -1,129 +1,149 @@
-# Trabajos ES Telcel - Sistema Web As-Built
+# Trabajos ES Telcel - Sistema Web As-Built & Pipeline de Automatización
 
-Plataforma web de ingeniería para la gestión, consulta de alta velocidad y exportación de información técnica de celdas celulares (**2G GSM, 3G UMTS, 4G LTE, 5G NR**) e inventario de hardware de estaciones base de **Telcel**.
+Plataforma integral de ingeniería para la gestión, procesamiento y automatización de entregables **As-Built** y **OTAS X REFS** de estaciones base celulares (**2G GSM, 3G UMTS, 4G LTE, 5G NR**) e inventario de hardware para **Telcel**.
 
-El proyecto resuelve la lentitud y bloqueos causados por el manejo de libros de Excel de gran tamaño (~250 MB y más de 1.5 millones de registros), trasladando la información a una base de datos **SQLite indexada** con una interfaz responsiva desarrollada en **Bootstrap 5** y **Python (Flask)**.
-
----
-
-## Características Principales
-
-1. **Herramienta As-Built Interactiva (Dashboard Tool)**:
-   - Consulta instantánea por Sitio / `NE ID` (ej. `CA0249`, `JL4089`, `MI2742`, `JL1999`, `MI2888`).
-   - Resumen en tiempo real de celdas **Activas** e **Inactivas** desglosadas por tecnología (2G, 3G, 4G, 5G).
-   - Tabla de módulos de radio **RRU** y asignación de sectores (Modelo RRU, Bandas, Potencia, Conector, Número de Serie).
-   - Pestañas con el detalle completo de celdas por tecnología e inventario de tarjetas de hardware.
-
-2. **Explorador Global de Celdas**:
-   - Navegación paginada por tecnología: 4G LTE, 3G UMTS, 2G GSM y 5G NR.
-   - Filtros por nombre de celda, código de sitio y estado de actividad/activación.
-
-3. **Explorador de Inventario y Hardware**:
-   - Búsqueda en tiempo real por **Número de Serie (SN / Barcode)**, Modelo de Tarjeta (BBU, DCDU, MRRU), Slot o Sitio.
-
-4. **Integridad del Archivo Excel Original**:
-   - El archivo maestro original de 250 MB (`AsBuilt Tool...xlsx`) permanece protegido en modo de **sólo lectura** (`read-only`).
-   - Motor ETL por lotes (streaming) con `openpyxl` que alimenta la base de datos sin sobrecargar la memoria RAM.
-
-5. **Descarga y Exportación Fiel a Excel**:
-   - Botón de **"Descargar en Excel"** que genera al vuelo un archivo `.xlsx` estructurado con los mismos nombres de hojas y columnas que el formato oficial:
-     - `Tool` (Hoja resumen idéntica a la plantilla de ingeniería)
-     - `GSM_CELL_REPORT` (16 columnas)
-     - `UMTS_CELL_REPORT` (18 columnas)
-     - `LTE_CELL_REPORT` (16 columnas)
-     - `NR_CELL_REPORT` (16 columnas)
-     - `RRU Filtro` (12 columnas)
-     - `Inventory Board` (41 columnas)
-     - `RRU Data Base` (4 columnas)
+El sistema procesa y cruza información proveniente de múltiples fuentes (archivos de ingeniería de ~250 MB con 1.5 millones de registros, listas de materiales, planos CAD, evidencia fotográfica ISDP Smart QC y auditoría de cambios) eliminando la lentitud y bloqueos de Excel mediante una base de datos **SQLite indexada** con interfaz moderna en **Bootstrap 5** y **Python (Flask)**.
 
 ---
 
-## Estructura del Proyecto
+## Flujo de Trabajo Secuencial (Pipeline de Automatización)
+
+A partir del análisis detallado de los videos de capacitación técnica del proceso de modernización Telcel (E&S / Huawei / Telcel), se ha estructurado la aplicación en **5 Fases Secuenciales Automatizadas**:
+
+```
+[Insumos de Entrada] ──► [Motor de Reglas] ──► [Generador OTAS X REFS] ──► [Generador AS BUILT] ──► [Control & Tracker]
+   • AsBuilt Tool           • Type Site             • Propuesta (Rev A)         • Ejecución Pasada       • Diff Celda a Celda
+   • OTA Validada           • 8 AWG vs 7 AWG        • Croquis Gabinete FPP      • Referencias Fotos      • TRACKER EYS
+   • Material List (ML)     • Metrajes DC / FO                                    (Ver foto 10, 11, 17)
+   • AutoCAD (DWG)          • Sectores & Azimuts
+   • ISDP Smart QC
+```
+
+### Paso 1: Ingesta y Cruce de Insumos por Sitio
+Al introducir el código del sitio (`ID NAME` / `Short DU ID`, ej. **`CA0249`**, **`QR5094`**, **`JL4089`**), el sistema extrae automáticamente:
+1. **As-Built Tool (Base de Datos)**: Conteo y estado de celdas 2G, 3G, 4G y 5G, tarjetas BBU y radios RRU.
+2. **OTA Validada (Versión previa aprobada)**: Existencia y altura de GPS (ej. 15.0 m), gabinete base (`TP48200A`), rectificadores y comentarios previos de ingeniería.
+3. **Material List (ML / Lista de Materiales)**:
+   - Tiradas de fibra óptica (ej. 40.0 m) y cable de fuerza DC (ej. 38.0 m).
+   - Longitud y conectores de jumpers (ej. 2.0 m con conectores DIN a 4.3-10 y 4.3-10 a 4.3-10).
+4. **AutoCAD (DWG)**: Azimuts de sectores (ej. ALFA: 350°, BETA: 130°, GAMMA: 250°) y alturas de montaje (15.0 m).
+5. **ISDP Smart QC (Huawei Cloud)**: Números de serie reales leídos de las fotos de etiquetas de antenas (`MBMF-65-18DDE-IN-43`, `ADU4518R6v06`, etc.) y radios RRU (`RRU5526`, `RRU5527et`).
+
+---
+
+### Paso 2: Motor de Reglas de Cableado y Metrajes Automáticos
+El sistema aplica automáticamente la matriz de compatibilidad técnica entre modelos de radio y calibres de cable de fuerza:
+
+| Calibre de Cable | Diámetro | Modelos de Radio Compatibles | Banda | Cálculo de Metraje |
+| :---: | :---: | :--- | :---: | :--- |
+| **8 AWG** | 8 mm | `RRU5513`, `RRU5526`, `RRU5526w`, `AAU 5G` | 850 / 600 MHz | \(3\text{ tiradas} \times 38\text{ m} = 114\text{ m}\) |
+| **7 AWG** | 10 mm | `RRU5517`, `RRU5527`, `RRU5527et` (Tribanda) | 1900 / 2100 / 2600 MHz | \(3\text{ tiradas} \times 38\text{ m} = 114\text{ m}\) |
+| **10 AWG** | 6 mm | Celdas legadas / Micro RRU | - | 0 m |
+| **5 / 4 AWG** | 16 / 25 mm | Alimentación principal Planta &rarr; DCDU | - | Según diseño |
+
+*Validación cruzada*: La suma de metrajes debe coincidir exactamente en la carátula (`ADICIONALES HARDWARE RF`), en la tabla de sectores y en la lista de materiales (ML).
+
+---
+
+### Paso 3: Generador Oficial `OTAS X REFS` (Revisión A)
+- **Nomenclatura**: Todo nuevo documento arranca en **`REV A`** (solo cambia a REV B, C... ante un rechazo del cliente).
+- **Redacción de Propuesta**: Redacta los requerimientos técnicos en tiempo futuro:
+  - *"Se requiere reutilizar gabinete TP48200A..."*
+  - *"Se requiere suministro e instalación de equipos (1) BBU5900, (2) DCDU17E y tarjetería (2) UBBPg2..."*
+  - *"Se requieren 6 tiradas de Fibra de 40.0m y 6 tiradas de cable DC de 38.0m..."*
+- **Distribución de Gabinete FPP**: Asignación de rectificadores (`PSU-2U`) y tarjetas banda base (`UBBPg2`, `UMPTe2`).
+
+---
+
+### Paso 4: Generador Oficial `ESTADO FINAL DE SITIO / AS BUILT`
+Transformación automática de la propuesta a ejecución real:
+1. **Conjugación al Pasado**:
+   - De *"Se requiere instalar..."* a *"Se instaló / Se reutilizó / Se desmontó..."*.
+2. **Inyección de Referencias Fotográficas ISDP**:
+   - Cada renglón de instalación incluye la cita a la foto de campo correspondiente:
+     - *"Se instalaron 3 RRU 5526 back to back... Ver foto 10 de sectores Alpha, Beta y Gamma."*
+     - *"Se instalaron 3 RRU5527et back to back... Ver foto 17 de sectores Alpha, Beta y Gamma."*
+     - *"Se reutilizaron 2 antenas MBMF-65-18DDE-IN-43... Ver foto 11 de sectores Alpha y Gamma."*
+3. **Desmontajes Detallados**:
+   - Identificación automática de antenas y radios desmontados para liberar espacio en torre (U850, GU1900, L2100, L2600, antenas TENPOLE y QUADPOLE).
+
+---
+
+### Paso 5: Auditoría de Control de Cambios & TRACKER EYS
+1. **Control de Cambios Celda por Celda**:
+   - Matriz comparativa entre **`OTA Validada`** (versión anterior) vs **`OTAS REFS`** (nueva propuesta).
+   - Detección visual de discrepancias en fechas, modelos de antena, longitudes de jumpers y calibres de cable.
+2. **Integración con TRACKER EYS**:
+   - Registro automático del sitio en el tablero de control:
+     - `Service`: As built / New Template
+     - `OTAS Status`: Completed (100%)
+     - `Team Owner`: ENGINEERING AND SERVICES JF SA DE CV
+     - `ITEM DESCRIPTION`: WITH TOOL
+     - `PRECIO`: $ 249.16 MXN
+
+---
+
+## Módulos de la Aplicación Web
+
+1. **`/pipeline` (Flujo Automatizado Secuencial)**:
+   - Asistente visual e interactivo de 5 pasos que guía y automatiza el proceso de cada sitio.
+2. **`/` (Dashboard As-Built Tool)**:
+   - Consulta instantánea de celdas activas e inactivas (2G, 3G, 4G, 5G), sectores y radios RRU.
+3. **`/cells` (Explorador Global de Celdas)**:
+   - Búsqueda y filtrado por celda, ID de sitio, estado y tecnología con paginación optimizada.
+4. **`/inventory` (Inventario de Tarjetas & RRU)**:
+   - Búsqueda por número de serie (SN Barcode), modelo de tarjeta (BBU, DCDU) o módulo de radio.
+5. **`/import-export` (Gestión y Descargas Excel)**:
+   - Sincronización en segundo plano con el archivo maestro y descarga de libros Excel (.xlsx) estructurados.
+
+---
+
+## Estructura de Archivos del Proyecto
 
 ```
 C:\proyectos\trabajos_es_telcel\
-├── app.py                      # Servidor web Flask y endpoints REST
-├── config.py                   # Configuración de rutas y variables de entorno
-├── database.py                 # Conexión SQLite, esquemas y creación de índices
-├── etl_importer.py             # Script de streaming ETL (Excel -> SQLite)
-├── excel_exporter.py           # Generador de reportes Excel (.xlsx) oficiales
+├── app.py                      # Servidor Flask, rutas REST y endpoints del pipeline
+├── config.py                   # Rutas y configuración general
+├── database.py                 # Esquema SQLite, tablas indexadas y conexiones
+├── etl_importer.py             # Motor de streaming por lotes (Excel -> SQLite)
+├── excel_exporter.py           # Generador de archivos Excel oficiales (.xlsx)
 ├── requirements.txt            # Dependencias del proyecto
-├── README.md                   # Documentación del sistema
-├── .gitignore                  # Exclusión de archivos binarios grandes y cachés
+├── README.md                   # Documentación técnica completa
+├── .gitignore                  # Exclusión de base de datos pesada y temporales
 ├── static/
-│   ├── css/
-│   │   └── custom.css          # Estilos personalizados Telcel
-│   └── js/
-│       └── app.js              # Funciones interactivas de interfaz
+│   ├── css/custom.css          # Estilos corporativos Telcel y badges
+│   └── js/app.js               # Interactividad y mayúsculas automáticas
 └── templates/
-    ├── base.html               # Layout maestro Bootstrap 5 con barra superior
-    ├── index.html              # Dashboard As-Built y buscador de sitios
+    ├── base.html               # Layout maestro con navbar
+    ├── pipeline.html           # Vista del Flujo Automatizado Secuencial
+    ├── index.html              # Dashboard As-Built Tool
     ├── cells.html              # Explorador paginado de celdas
-    ├── inventory.html          # Explorador de tarjetas e inventario RRU
+    ├── inventory.html          # Explorador de hardware y seriales
     └── import_export.html      # Panel de sincronización y descargas
 ```
 
 ---
 
-## Base de Datos (SQLite)
+## Instrucciones para Ejecutar
 
-La base de datos `database.db` almacena las tablas relacionales con índices B-Tree optimizados:
+1. **Instalar dependencias**:
+   ```powershell
+   cd C:\proyectos\trabajos_es_telcel
+   pip install -r requirements.txt
+   ```
 
-- **`gsm_cells`**: Celdas 2G con índices en `id_name`, `cell_name`, `activity_status`.
-- **`umts_cells`**: Celdas 3G con índices en `id_name`, `cell_name`, `activity_status`.
-- **`lte_cells`**: Celdas 4G con índices en `id_name`, `cell_name`, `frequency_band`, `activation_status`.
-- **`nr_cells`**: Celdas 5G con índices en `id_name`, `cell_name`, `frequency_band`, `activation_status`.
-- **`inventory_boards`**: Inventario de tarjetas (590k+ registros) con índices en `id_name`, `sn_barcode`, `board_name`, `model`.
-- **`rru_items`**: Radios RRU por sitio con índices en `id_name`, `no_serie`, `modelo_rru`.
-- **`rru_catalog`**: Catálogo de especificaciones técnicas de radios.
-- **`import_metadata`**: Historial de ingestas y marcas de tiempo.
+2. **Iniciar la aplicación**:
+   ```powershell
+   python app.py
+   ```
 
----
-
-## Instalación y Ejecución
-
-### 1. Requisitos Previos
-Tener instalado Python 3.9 o superior. Las librerías necesarias se encuentran en `requirements.txt`:
-```bash
-cd C:\proyectos\trabajos_es_telcel
-pip install -r requirements.txt
-```
-
-### 2. Inicializar Base de Datos e Importar Datos
-Puedes inicializar la base de datos y cargar la información ejecutando el importador ETL:
-```bash
-python etl_importer.py
-```
-*(También puedes iniciar la sincronización desde el botón interactivo en la pestaña "Importar / Descargar Excel" de la aplicación web).*
-
-### 3. Iniciar el Servidor Web
-Ejecuta la aplicación Flask:
-```bash
-python app.py
-```
-
-Abre tu navegador web e ingresa a:
-```
-http://localhost:5000
-```
+3. **Abrir en el navegador**:
+   - Portal General: [http://localhost:5000](http://localhost:5000)
+   - Flujo Automatizado: [http://localhost:5000/pipeline](http://localhost:5000/pipeline)
 
 ---
 
-## Subir a GitHub
+## Repositorio en GitHub
 
-El proyecto ya cuenta con el repositorio local de Git configurado con `.gitignore` para proteger la privacidad y evitar subir archivos binarios pesados.
-
-Para vincularlo a tu repositorio remoto de GitHub y subir los cambios:
-
-```bash
-cd C:\proyectos\trabajos_es_telcel
-
-# 1. Agregar el repositorio remoto de tu cuenta de GitHub:
-git remote add origin https://github.com/TU_USUARIO/trabajos_es_telcel.git
-
-# 2. Renombrar la rama principal a main (o master según tu preferencia):
-git branch -M main
-
-# 3. Subir el código:
-git push -u origin main
-```
+* **URL del Repositorio:** [https://github.com/GhostLT/trabajos_es_telcel](https://github.com/GhostLT/trabajos_es_telcel)
+* **Rama principal:** `main`
