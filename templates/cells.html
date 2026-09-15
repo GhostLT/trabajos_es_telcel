@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Explorador de Celdas | Trabajos ES Telcel{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h3 class="fw-bold mb-0 text-telcel"><i class="bi bi-grid-3x3-gap-fill text-primary me-2"></i>Explorador de Celdas</h3>
+        <span class="text-muted small">Consulta, filtra y analiza celdas por tecnología y estado</span>
+    </div>
+    <div>
+        <a href="/api/export/site/all" class="btn btn-success fw-semibold">
+            <i class="bi bi-file-earmark-excel-fill me-1"></i> Descargar Todo en Excel
+        </a>
+    </div>
+</div>
+
+<!-- Technology Tabs -->
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link {% if tech == 'lte' %}active fw-bold text-success border-bottom-0{% endif %}" href="{{ url_for('cells', tech='lte', q=search, status=status) }}">
+            <i class="bi bi-reception-4 me-1"></i> 4G LTE
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if tech == 'umts' %}active fw-bold text-info border-bottom-0{% endif %}" href="{{ url_for('cells', tech='umts', q=search, status=status) }}">
+            <i class="bi bi-reception-3 me-1"></i> 3G UMTS
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if tech == 'gsm' %}active fw-bold text-primary border-bottom-0{% endif %}" href="{{ url_for('cells', tech='gsm', q=search, status=status) }}">
+            <i class="bi bi-reception-2 me-1"></i> 2G GSM
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if tech == 'nr' %}active fw-bold text-purple border-bottom-0{% endif %}" href="{{ url_for('cells', tech='nr', q=search, status=status) }}">
+            <i class="bi bi-reception-4 me-1"></i> 5G NR
+        </a>
+    </li>
+</ul>
+
+<!-- Filter Form -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body p-3 bg-white">
+        <form method="get" action="{{ url_for('cells') }}" class="row g-2 align-items-center">
+            <input type="hidden" name="tech" value="{{ tech }}">
+            
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Buscar por Nombre de Celda o Sitio..." value="{{ search }}">
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">Todos los Estados</option>
+                    <option value="Act" {% if status == 'Act' %}selected{% endif %}>Solo Activas</option>
+                    <option value="Inact" {% if status == 'Inact' %}selected{% endif %}>Solo Inactivas</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100 fw-semibold">
+                    <i class="bi bi-filter me-1"></i> Filtrar
+                </button>
+            </div>
+
+            <div class="col-md-2">
+                <a href="{{ url_for('cells', tech=tech) }}" class="btn btn-outline-secondary w-100">
+                    Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Results Info -->
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <span class="text-muted small">Total encontrados: <strong>{{ "{:,}".format(total_count) }}</strong> celdas</span>
+    <span class="text-muted small">Página {{ page }} de {{ total_pages or 1 }}</span>
+</div>
+
+<!-- Table of Cells -->
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle mb-0">
+                <thead class="table-dark">
+                    {% if tech == 'lte' %}
+                    <tr>
+                        <th>Sitio (NE ID)</th>
+                        <th>Nombre de Celda</th>
+                        <th>Cell ID</th>
+                        <th>eNodeB ID</th>
+                        <th>TAC</th>
+                        <th>Banda de Frecuencia</th>
+                        <th>Estado Activación</th>
+                        <th>Acción</th>
+                    </tr>
+                    {% elif tech == 'umts' %}
+                    <tr>
+                        <th>Sitio (NE ID)</th>
+                        <th>Nombre de Celda</th>
+                        <th>Cell ID</th>
+                        <th>NodeB Name</th>
+                        <th>LAC</th>
+                        <th>Frecuencia DL/UL</th>
+                        <th>Estado Actividad</th>
+                        <th>Acción</th>
+                    </tr>
+                    {% elif tech == 'gsm' %}
+                    <tr>
+                        <th>Sitio (NE ID)</th>
+                        <th>Nombre de Celda</th>
+                        <th>Cell Index</th>
+                        <th>Site Name</th>
+                        <th>Segmento Frec.</th>
+                        <th>BCCHNO</th>
+                        <th>Estado Actividad</th>
+                        <th>Acción</th>
+                    </tr>
+                    {% elif tech == 'nr' %}
+                    <tr>
+                        <th>Sitio (NE ID)</th>
+                        <th>Nombre de Celda</th>
+                        <th>NR Cell ID</th>
+                        <th>gNodeB ID</th>
+                        <th>TAC</th>
+                        <th>Banda de Frecuencia</th>
+                        <th>Estado Activación</th>
+                        <th>Acción</th>
+                    </tr>
+                    {% endif %}
+                </thead>
+                <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>
+                            <a href="/?site={{ r.id_name }}" class="badge bg-primary text-decoration-none fs-7">
+                                {{ r.id_name }}
+                            </a>
+                        </td>
+                        <td class="fw-bold">{{ r.cell_name }}</td>
+                        
+                        {% if tech == 'lte' %}
+                        <td>{{ r.cell_id }}</td>
+                        <td>{{ r.enodeb_id }}</td>
+                        <td>{{ r.tac }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ r.frequency_band }}</span></td>
+                        <td>
+                            {% if 'ACT' in (r.activation_status or '').upper() %}
+                                <span class="badge bg-success">Activa</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ r.activation_status }}</span>
+                            {% endif %}
+                        </td>
+                        {% elif tech == 'umts' %}
+                        <td>{{ r.cell_id }}</td>
+                        <td>{{ r.nodeb_name }}</td>
+                        <td>{{ r.lac }}</td>
+                        <td>{{ r.dl_freq }} / {{ r.ul_freq }}</td>
+                        <td>
+                            {% if 'ACT' in (r.activity_status or '').upper() %}
+                                <span class="badge bg-success">Activa</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ r.activity_status }}</span>
+                            {% endif %}
+                        </td>
+                        {% elif tech == 'gsm' %}
+                        <td>{{ r.cell_index }}</td>
+                        <td>{{ r.site_name }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ r.freq_seg }}</span></td>
+                        <td>{{ r.bcchno }}</td>
+                        <td>
+                            {% if 'ACT' in (r.activity_status or '').upper() %}
+                                <span class="badge bg-success">Activa</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ r.activity_status }}</span>
+                            {% endif %}
+                        </td>
+                        {% elif tech == 'nr' %}
+                        <td>{{ r.nr_cell_id }}</td>
+                        <td>{{ r.gnodeb_id }}</td>
+                        <td>{{ r.tac }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ r.frequency_band }}</span></td>
+                        <td>
+                            {% if 'ACT' in (r.activation_status or '').upper() %}
+                                <span class="badge bg-success">Activa</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ r.activation_status }}</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+
+                        <td>
+                            <a href="/?site={{ r.id_name }}" class="btn btn-sm btn-outline-primary" title="Ver Sitio">
+                                <i class="bi bi-eye-fill"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            No se encontraron registros con los filtros especificados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page > 1 %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('cells', tech=tech, q=search, status=status, page=page-1) }}">Anterior</a>
+        </li>
+        {% endif %}
+
+        <li class="page-item active">
+            <span class="page-link">{{ page }}</span>
+        </li>
+
+        {% if page < total_pages %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('cells', tech=tech, q=search, status=status, page=page+1) }}">Siguiente</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% endblock %}

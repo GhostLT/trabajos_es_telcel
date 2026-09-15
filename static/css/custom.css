@@ -1,0 +1,95 @@
+:root {
+    --telcel-blue: #002F6C;
+    --telcel-dark: #001A3D;
+    --telcel-light: #0050A4;
+    --telcel-accent: #FF9E1B;
+}
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #212529;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* Telcel Navbar & Palette */
+.bg-telcel {
+    background: linear-gradient(135deg, var(--telcel-dark) 0%, var(--telcel-blue) 100%) !important;
+}
+
+.text-telcel {
+    color: var(--telcel-blue) !important;
+}
+
+.btn-telcel {
+    background-color: var(--telcel-blue);
+    border-color: var(--telcel-blue);
+    color: #ffffff;
+}
+
+.btn-telcel:hover, .btn-telcel:focus {
+    background-color: var(--telcel-dark);
+    border-color: var(--telcel-dark);
+    color: #ffffff;
+}
+
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+/* Stat Cards */
+.stat-card {
+    border-radius: 10px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-left: 4px solid var(--telcel-blue) !important;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Nav Pills */
+.nav-pills .nav-link {
+    color: #495057;
+    border-radius: 8px;
+    padding: 8px 16px;
+    margin-right: 6px;
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--telcel-blue);
+    color: #ffffff;
+}
+
+/* Tables */
+.table th {
+    font-size: 0.85rem;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+.table td {
+    font-size: 0.9rem;
+    vertical-align: middle;
+}
+
+.fs-7 {
+    font-size: 0.8rem !important;
+}
+
+/* Inputs & Forms */
+.form-control:focus, .form-select:focus {
+    border-color: var(--telcel-light);
+    box-shadow: 0 0 0 0.25rem rgba(0, 47, 108, 0.15);
+}
+
+/* Card Styling */
+.card {
+    border-radius: 12px;
+}

@@ -1,0 +1,478 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard As-Built | Trabajos ES Telcel{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <!-- Global Stats Cards -->
+    <div class="col-md-2 col-sm-4 col-6 mb-2">
+        <div class="card stat-card border-0 shadow-sm bg-white">
+            <div class="card-body py-2 px-3">
+                <span class="text-muted small fw-semibold">2G GSM</span>
+                <h4 class="mb-0 text-primary fw-bold">{{ "{:,}".format(stats.gsm) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-2">
+        <div class="card stat-card border-0 shadow-sm bg-white">
+            <div class="card-body py-2 px-3">
+                <span class="text-muted small fw-semibold">3G UMTS</span>
+                <h4 class="mb-0 text-info fw-bold">{{ "{:,}".format(stats.umts) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-2">
+        <div class="card stat-card border-0 shadow-sm bg-white">
+            <div class="card-body py-2 px-3">
+                <span class="text-muted small fw-semibold">4G LTE</span>
+                <h4 class="mb-0 text-success fw-bold">{{ "{:,}".format(stats.lte) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-2">
+        <div class="card stat-card border-0 shadow-sm bg-white">
+            <div class="card-body py-2 px-3">
+                <span class="text-muted small fw-semibold">5G NR</span>
+                <h4 class="mb-0 text-purple fw-bold">{{ "{:,}".format(stats.nr) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-2">
+        <div class="card stat-card border-0 shadow-sm bg-white">
+            <div class="card-body py-2 px-3">
+                <span class="text-muted small fw-semibold">Tarjetas BBU</span>
+                <h4 class="mb-0 text-secondary fw-bold">{{ "{:,}".format(stats.inv) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-2">
+        <div class="card stat-card border-0 shadow-sm bg-white">
+            <div class="card-body py-2 px-3">
+                <span class="text-muted small fw-semibold">Radios RRU</span>
+                <h4 class="mb-0 text-warning fw-bold">{{ "{:,}".format(stats.rru) }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Search Box (AsBuilt Tool Interface) -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body p-4 bg-white rounded">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h4 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-tools text-primary"></i>
+                    Herramienta As-Built: Consulta por Sitio / NE ID
+                </h4>
+                <p class="text-muted mb-3 small">
+                    Introduce el código del sitio (ej. <strong>CA0249</strong>, <strong>JL4089</strong>, <strong>MI2742</strong>, <strong>JL1999</strong>) para obtener al instante el resumen de celdas 2G/3G/4G/5G, sectores y radios RRU.
+                </p>
+                <form action="{{ url_for('index') }}" method="get" class="row g-2">
+                    <div class="col-sm-8">
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-light"><i class="bi bi-geo-alt-fill text-danger"></i></span>
+                            <input type="text" name="site" id="siteInput" class="form-control" placeholder="Escribe el NE ID (ej. CA0249)" value="{{ site_query }}" required autofocus>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <button type="submit" class="btn btn-telcel btn-lg w-100 fw-bold">
+                            <i class="bi bi-search me-1"></i> Consultar Sitio
+                        </button>
+                    </div>
+                </form>
+                <div class="mt-2 small text-muted">
+                    Sugerencias rápidas:
+                    <a href="/?site=CA0249" class="badge bg-light text-dark border text-decoration-none me-1">CA0249</a>
+                    <a href="/?site=JL4089" class="badge bg-light text-dark border text-decoration-none me-1">JL4089</a>
+                    <a href="/?site=MI2742" class="badge bg-light text-dark border text-decoration-none me-1">MI2742</a>
+                    <a href="/?site=JL1999" class="badge bg-light text-dark border text-decoration-none me-1">JL1999</a>
+                    <a href="/?site=MI2888" class="badge bg-light text-dark border text-decoration-none">MI2888</a>
+                </div>
+            </div>
+            <div class="col-lg-4 mt-3 mt-lg-0 text-lg-end">
+                <div class="p-3 bg-light rounded border text-center">
+                    <span class="text-muted small d-block mb-1">Exportación en Formato Original</span>
+                    <a href="/api/export/site/{{ site_query or 'all' }}" class="btn btn-success fw-bold w-100 py-2">
+                        <i class="bi bi-cloud-arrow-down-fill me-1 fs-5 align-middle"></i>
+                        Descargar en Excel (.xlsx)
+                    </a>
+                    <small class="text-muted d-block mt-1">Genera la estructura idéntica a AsBuilt Tool</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if site_data %}
+<!-- Site Details View -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <span class="text-muted small text-uppercase">Resultados para Sitio</span>
+            <h3 class="mb-0 fw-bold text-telcel d-flex align-items-center gap-2">
+                <i class="bi bi-reception-4 text-success"></i>
+                Sitio: {{ site_data.site_id }}
+            </h3>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/api/export/site/{{ site_data.site_id }}" class="btn btn-outline-success fw-semibold">
+                <i class="bi bi-file-earmark-excel-fill me-1"></i> Descargar Excel de {{ site_data.site_id }}
+            </a>
+            <a href="/" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle me-1"></i> Limpiar
+            </a>
+        </div>
+    </div>
+    
+    <div class="card-body p-4">
+        <!-- Replicating the Original Tool Excel Grid -->
+        <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-calculator me-1 text-primary"></i> Resumen de Tecnologías (Estado de Celdas)</h5>
+        
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered text-center align-middle shadow-sm">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 20%;">ESTADO</th>
+                        <th style="width: 20%; background-color: #0d6efd;">2G (GSM)</th>
+                        <th style="width: 20%; background-color: #0dcaf0; color: #000;">3G (UMTS)</th>
+                        <th style="width: 20%; background-color: #198754;">4G (LTE)</th>
+                        <th style="width: 20%; background-color: #6f42c1;">5G (NR)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="table-light">
+                        <td class="fw-bold text-start ps-3 text-success">
+                            <i class="bi bi-check-circle-fill me-1"></i> ACTIVAS
+                        </td>
+                        <td class="fs-5 fw-bold text-primary">{{ site_data.counts.gsm.act }}</td>
+                        <td class="fs-5 fw-bold text-info">{{ site_data.counts.umts.act }}</td>
+                        <td class="fs-5 fw-bold text-success">{{ site_data.counts.lte.act }}</td>
+                        <td class="fs-5 fw-bold text-purple">{{ site_data.counts.nr.act }}</td>
+                    </tr>
+                    <tr class="table-light">
+                        <td class="fw-bold text-start ps-3 text-danger">
+                            <i class="bi bi-dash-circle-fill me-1"></i> INACTIVAS
+                        </td>
+                        <td class="fs-5 fw-bold text-muted">{{ site_data.counts.gsm.inact }}</td>
+                        <td class="fs-5 fw-bold text-muted">{{ site_data.counts.umts.inact }}</td>
+                        <td class="fs-5 fw-bold text-muted">{{ site_data.counts.lte.inact }}</td>
+                        <td class="fs-5 fw-bold text-muted">{{ site_data.counts.nr.inact }}</td>
+                    </tr>
+                    <tr class="table-secondary">
+                        <td class="fw-bold text-start ps-3">TOTAL CELDAS</td>
+                        <td class="fw-bold">{{ site_data.counts.gsm.total }}</td>
+                        <td class="fw-bold">{{ site_data.counts.umts.total }}</td>
+                        <td class="fw-bold">{{ site_data.counts.lte.total }}</td>
+                        <td class="fw-bold">{{ site_data.counts.nr.total }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Detailed Tabs Navigation -->
+        <ul class="nav nav-pills mb-3 border-bottom pb-2" id="siteTab" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active fw-semibold" id="rru-tab" data-bs-toggle="pill" data-bs-target="#tab-rru" type="button">
+                    <i class="bi bi-broadcast-pin me-1"></i> Radios RRU & Sectores ({{ site_data.rru_list|length }})
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link fw-semibold" id="lte-tab" data-bs-toggle="pill" data-bs-target="#tab-lte" type="button">
+                    <i class="bi bi-reception-4 me-1"></i> Celdas 4G LTE ({{ site_data.lte_cells|length }})
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link fw-semibold" id="umts-tab" data-bs-toggle="pill" data-bs-target="#tab-umts" type="button">
+                    <i class="bi bi-reception-3 me-1"></i> Celdas 3G UMTS ({{ site_data.umts_cells|length }})
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link fw-semibold" id="gsm-tab" data-bs-toggle="pill" data-bs-target="#tab-gsm" type="button">
+                    <i class="bi bi-reception-2 me-1"></i> Celdas 2G GSM ({{ site_data.gsm_cells|length }})
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link fw-semibold" id="nr-tab" data-bs-toggle="pill" data-bs-target="#tab-nr" type="button">
+                    <i class="bi bi-reception-4 text-purple me-1"></i> Celdas 5G NR ({{ site_data.nr_cells|length }})
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link fw-semibold" id="inv-tab" data-bs-toggle="pill" data-bs-target="#tab-inv" type="button">
+                    <i class="bi bi-cpu me-1"></i> Inventario Tarjetas ({{ site_data.inv_list|length }})
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="siteTabContent">
+            <!-- 1. RRU Tab -->
+            <div class="tab-pane fade show active" id="tab-rru">
+                {% if site_data.rru_list %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle border">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>#</th>
+                                <th>Modelo RRU</th>
+                                <th>Bandas Soportadas</th>
+                                <th>Tarjeta / Board</th>
+                                <th>Potencia</th>
+                                <th>Número de Serie</th>
+                                <th>Conector</th>
+                                <th>Subrack</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in site_data.rru_list %}
+                            <tr>
+                                <td><span class="badge bg-secondary">Sector {{ loop.index }}</span></td>
+                                <td class="fw-bold text-primary">{{ r.modelo_rru }}</td>
+                                <td><span class="badge bg-light text-dark border">{{ r.bandas_soportadas }}</span></td>
+                                <td>{{ r.board_name }}</td>
+                                <td><span class="badge bg-info text-dark">{{ r.potencia }}</span></td>
+                                <td><code>{{ r.no_serie }}</code></td>
+                                <td>{{ r.conector }}</td>
+                                <td>{{ r.subrack }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-light border text-center py-4">
+                    <i class="bi bi-info-circle fs-3 text-muted d-block mb-2"></i>
+                    No se encontraron registros de RRU para este sitio.
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- 2. LTE Tab -->
+            <div class="tab-pane fade" id="tab-lte">
+                {% if site_data.lte_cells %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm align-middle border">
+                        <thead class="table-success">
+                            <tr>
+                                <th>Cell Name</th>
+                                <th>Cell ID</th>
+                                <th>eNodeB ID</th>
+                                <th>TAC</th>
+                                <th>Banda de Frecuencia</th>
+                                <th>Estado Activación</th>
+                                <th>Estado Operación</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in site_data.lte_cells %}
+                            <tr>
+                                <td class="fw-bold">{{ c.cell_name }}</td>
+                                <td>{{ c.cell_id }}</td>
+                                <td>{{ c.enodeb_id }}</td>
+                                <td>{{ c.tac }}</td>
+                                <td><span class="badge bg-light text-dark border">{{ c.frequency_band }}</span></td>
+                                <td>
+                                    {% if 'ACT' in (c.activation_status or '').upper() %}
+                                        <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ c.activation_status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ c.operating_status }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-light border text-center py-4">No hay celdas LTE 4G para este sitio.</div>
+                {% endif %}
+            </div>
+
+            <!-- 3. UMTS Tab -->
+            <div class="tab-pane fade" id="tab-umts">
+                {% if site_data.umts_cells %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm align-middle border">
+                        <thead class="table-info">
+                            <tr>
+                                <th>Cell Name</th>
+                                <th>Cell ID</th>
+                                <th>NodeB Name</th>
+                                <th>LAC</th>
+                                <th>SAC</th>
+                                <th>Frecuencia DL/UL</th>
+                                <th>Potencia Máx</th>
+                                <th>Estado Actividad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in site_data.umts_cells %}
+                            <tr>
+                                <td class="fw-bold">{{ c.cell_name }}</td>
+                                <td>{{ c.cell_id }}</td>
+                                <td>{{ c.nodeb_name }}</td>
+                                <td>{{ c.lac }}</td>
+                                <td>{{ c.sac }}</td>
+                                <td>{{ c.dl_freq }} / {{ c.ul_freq }}</td>
+                                <td>{{ c.max_power }}</td>
+                                <td>
+                                    {% if 'ACT' in (c.activity_status or '').upper() %}
+                                        <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ c.activity_status }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-light border text-center py-4">No hay celdas UMTS 3G para este sitio.</div>
+                {% endif %}
+            </div>
+
+            <!-- 4. GSM Tab -->
+            <div class="tab-pane fade" id="tab-gsm">
+                {% if site_data.gsm_cells %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm align-middle border">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Cell Name</th>
+                                <th>Cell Index</th>
+                                <th>Site Name</th>
+                                <th>Segmento Frecuencia</th>
+                                <th>BCCHNO</th>
+                                <th>LAC</th>
+                                <th>Estado Actividad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in site_data.gsm_cells %}
+                            <tr>
+                                <td class="fw-bold">{{ c.cell_name }}</td>
+                                <td>{{ c.cell_index }}</td>
+                                <td>{{ c.site_name }}</td>
+                                <td><span class="badge bg-light text-dark border">{{ c.freq_seg }}</span></td>
+                                <td>{{ c.bcchno }}</td>
+                                <td>{{ c.lac }}</td>
+                                <td>
+                                    {% if 'ACT' in (c.activity_status or '').upper() %}
+                                        <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ c.activity_status }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-light border text-center py-4">No hay celdas GSM 2G para este sitio.</div>
+                {% endif %}
+            </div>
+
+            <!-- 5. NR Tab -->
+            <div class="tab-pane fade" id="tab-nr">
+                {% if site_data.nr_cells %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm align-middle border">
+                        <thead style="background-color: #6f42c1; color: white;">
+                            <tr>
+                                <th>Cell Name</th>
+                                <th>NR Cell ID</th>
+                                <th>gNodeB Function</th>
+                                <th>TAC</th>
+                                <th>Banda de Frecuencia</th>
+                                <th>Estado Activación</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in site_data.nr_cells %}
+                            <tr>
+                                <td class="fw-bold">{{ c.cell_name }}</td>
+                                <td>{{ c.nr_cell_id }}</td>
+                                <td>{{ c.gnodeb_function_name }}</td>
+                                <td>{{ c.tac }}</td>
+                                <td><span class="badge bg-light text-dark border">{{ c.frequency_band }}</span></td>
+                                <td>
+                                    {% if 'ACT' in (c.activation_status or '').upper() %}
+                                        <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ c.activation_status }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-light border text-center py-4">No hay celdas NR 5G para este sitio.</div>
+                {% endif %}
+            </div>
+
+            <!-- 6. Inventory Tab -->
+            <div class="tab-pane fade" id="tab-inv">
+                {% if site_data.inv_list %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm align-middle border">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Tarjeta / Board</th>
+                                <th>Modelo</th>
+                                <th>Número de Serie (SN)</th>
+                                <th>Slot / Posición</th>
+                                <th>Subrack</th>
+                                <th>Fabricante / Datos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in site_data.inv_list %}
+                            <tr>
+                                <td class="fw-bold text-primary">{{ i.board_name }}</td>
+                                <td>{{ i.model }}</td>
+                                <td><code>{{ i.sn_barcode }}</code></td>
+                                <td>{{ i.slot_no }} / {{ i.slot_pos }}</td>
+                                <td>{{ i.subrack_no }}</td>
+                                <td class="small text-muted">{{ i.manufacturer_data }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-light border text-center py-4">No hay registros de inventario para este sitio.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- Welcome Banner if no site searched -->
+<div class="card shadow-sm border-0 text-center py-5">
+    <div class="card-body">
+        <i class="bi bi-broadcast text-telcel fs-1 d-block mb-3"></i>
+        <h3 class="fw-bold text-dark">Bienvenido al Portal As-Built Telcel</h3>
+        <p class="text-muted col-lg-6 mx-auto">
+            La información técnica del archivo maestro de Excel está indexada en base de datos.
+            Introduce el código de un sitio arriba o usa una de las sugerencias para inspeccionar sus celdas, sectores y radios.
+        </p>
+        <div class="d-flex justify-content-center gap-2 mt-3 flex-wrap">
+            <a href="/cells?tech=lte" class="btn btn-outline-primary">
+                <i class="bi bi-grid-3x3-gap me-1"></i> Ver Todas las Celdas LTE
+            </a>
+            <a href="/inventory" class="btn btn-outline-secondary">
+                <i class="bi bi-cpu me-1"></i> Explorar Inventario Hardware
+            </a>
+            <a href="/import-export" class="btn btn-outline-success">
+                <i class="bi bi-file-earmark-excel me-1"></i> Estado y Descargas
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

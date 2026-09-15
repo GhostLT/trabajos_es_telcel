@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Inventario de Hardware y RRU | Trabajos ES Telcel{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h3 class="fw-bold mb-0 text-telcel"><i class="bi bi-cpu-fill text-primary me-2"></i>Inventario de Tarjetas & Radios RRU</h3>
+        <span class="text-muted small">Búsqueda rápida por Número de Serie (SN), Modelo, Tarjeta o Sitio</span>
+    </div>
+    <div>
+        <a href="/api/export/site/all" class="btn btn-success fw-semibold">
+            <i class="bi bi-file-earmark-excel-fill me-1"></i> Descargar Todo en Excel
+        </a>
+    </div>
+</div>
+
+<!-- Type Switch (Boards vs RRU) -->
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item">
+        <a class="nav-link {% if inv_type == 'boards' %}active fw-semibold{% endif %}" href="{{ url_for('inventory', type='boards', q=search) }}">
+            <i class="bi bi-motherboard me-1"></i> Tarjetas BBU / Hardware (Inventory Board)
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if inv_type == 'rru' %}active fw-semibold{% endif %}" href="{{ url_for('inventory', type='rru', q=search) }}">
+            <i class="bi bi-broadcast-pin me-1"></i> Módulos de Radio RRU (RRU Filtro)
+        </a>
+    </li>
+</ul>
+
+<!-- Search Bar -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body p-3 bg-white">
+        <form method="get" action="{{ url_for('inventory') }}" class="row g-2 align-items-center">
+            <input type="hidden" name="type" value="{{ inv_type }}">
+            <div class="col-md-9">
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Buscar por Número de Serie (SN), Modelo (ej. RRU5903), Nombre de Tarjeta o Sitio..." value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100 fw-semibold">
+                    <i class="bi bi-search me-1"></i> Buscar
+                </button>
+                <a href="{{ url_for('inventory', type=inv_type) }}" class="btn btn-outline-secondary">
+                    Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Count info -->
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <span class="text-muted small">Total registros: <strong>{{ "{:,}".format(total_count) }}</strong></span>
+    <span class="text-muted small">Página {{ page }} de {{ total_pages or 1 }}</span>
+</div>
+
+<!-- Data Table -->
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            {% if inv_type == 'rru' %}
+            <!-- RRU Table -->
+            <table class="table table-hover table-striped align-middle mb-0">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Sitio (NE ID)</th>
+                        <th>NE Name</th>
+                        <th>Modelo RRU</th>
+                        <th>Bandas Soportadas</th>
+                        <th>Potencia</th>
+                        <th>Número de Serie (SN)</th>
+                        <th>Conector</th>
+                        <th>Subrack</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>
+                            <a href="/?site={{ r.id_name }}" class="badge bg-primary text-decoration-none">
+                                {{ r.id_name }}
+                            </a>
+                        </td>
+                        <td>{{ r.ne_name }}</td>
+                        <td class="fw-bold text-primary">{{ r.modelo_rru }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ r.bandas_soportadas }}</span></td>
+                        <td><span class="badge bg-info text-dark">{{ r.potencia }}</span></td>
+                        <td><code>{{ r.no_serie }}</code></td>
+                        <td>{{ r.conector }}</td>
+                        <td>{{ r.subrack }}</td>
+                        <td>
+                            <a href="/?site={{ r.id_name }}" class="btn btn-sm btn-outline-primary" title="Ver Sitio">
+                                <i class="bi bi-eye-fill"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center py-4 text-muted">No se encontraron registros RRU.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <!-- Boards Table -->
+            <table class="table table-hover table-striped align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Sitio (NE ID)</th>
+                        <th>NE Name</th>
+                        <th>Tarjeta / Board</th>
+                        <th>Modelo</th>
+                        <th>Número de Serie (SN Barcode)</th>
+                        <th>Slot / Posición</th>
+                        <th>Subrack</th>
+                        <th>Fabricante / Datos</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>
+                            <a href="/?site={{ r.id_name }}" class="badge bg-primary text-decoration-none">
+                                {{ r.id_name }}
+                            </a>
+                        </td>
+                        <td>{{ r.ne_name }}</td>
+                        <td class="fw-bold text-primary">{{ r.board_name }}</td>
+                        <td>{{ r.model }}</td>
+                        <td><code>{{ r.sn_barcode }}</code></td>
+                        <td>{{ r.slot_no }} / {{ r.slot_pos }}</td>
+                        <td>{{ r.subrack_no }}</td>
+                        <td class="small text-muted" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            {{ r.manufacturer_data }}
+                        </td>
+                        <td>
+                            <a href="/?site={{ r.id_name }}" class="btn btn-sm btn-outline-primary" title="Ver Sitio">
+                                <i class="bi bi-eye-fill"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center py-4 text-muted">No se encontraron tarjetas de hardware.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page > 1 %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('inventory', type=inv_type, q=search, page=page-1) }}">Anterior</a>
+        </li>
+        {% endif %}
+
+        <li class="page-item active">
+            <span class="page-link">{{ page }}</span>
+        </li>
+
+        {% if page < total_pages %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('inventory', type=inv_type, q=search, page=page+1) }}">Siguiente</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% endblock %}
